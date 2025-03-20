@@ -101,3 +101,60 @@ export const login = async (req,res) => {
         });
     }
 }
+
+export const resetpassword = async (req,res) => {
+    const {user} = req.user;
+    const { oldPassword, newPassword } = req.body;
+
+    if(oldPassword === newPassword) {
+        return res.status(400).json({
+            message: "Old password and new password cannot be the same"
+        });
+    };
+
+    if(!oldPassword) {
+        return res.status(400).json({
+            message : "Old Password Is Required To Reset Your Password"
+        });
+    };
+
+    if(!newPassword) {
+        return res.status(400).json({
+            message: "New Password Is Required To Reset Your Password"
+        });
+    };
+
+    try {
+        const isUser = await User.findById(user._id);
+
+        if(!isUser) {
+            return res.status(404).json({
+                message: "User Not Found"
+            });
+        };
+
+        const isMatch = await bcrypt.compare(oldPassword, isUser.password);
+
+        if(!isMatch) {
+            return res.status(400).json({
+                message : "Old Password Is Incorrect"
+            })
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword,salt);
+
+        isUser.password = hashedPassword;
+
+        isUser.save();
+
+        return res.status(200).json({
+            message: "Password Updated Sucessfully"
+        })
+    } catch (error) {
+        console.log("error in auth controller in change password" + error);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+}
