@@ -5,6 +5,7 @@ import cors from "cors";
 import authRouter from "./routes/auth.route.js";
 import profileRouter from "./routes/profile.route.js"
 import jobRouter from "./routes/job.route.js"
+import applicationRouter from "./routes/application.route.js"
 import connectDb from "./lib/connectToDb.js";
 
 dotenv.config();
@@ -19,6 +20,7 @@ connectDb();
 app.use("/auth",authRouter);
 app.use("/profile",profileRouter);
 app.use("/job",jobRouter);
+app.use("/application",applicationRouter);
 
 app.get("/",(req,res) => {
     res.send("Backend working");
