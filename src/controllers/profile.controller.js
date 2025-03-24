@@ -2,7 +2,7 @@ import User from "../models/user.model.js";
 import Rating from "../models/rating.model.js";
 
 export const getUser = async (req, res) => {
-  const { user } = req.user;
+  const  user  = req.user;
 
   try {
     const userDetails = await User.findById(user._id).select("-password").lean();
@@ -46,7 +46,7 @@ export const getUser = async (req, res) => {
 };
 
 export const editUser = async (req,res) => {
-    const {user} = req.user;
+    const user = req.user;
     const {name,bio,skills,portfolio} = req.body;
 
     try {

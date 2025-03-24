@@ -5,7 +5,7 @@ import savedJobsModel from "../models/savedJobs.model.js";
 import CurrentJob from "../models/currentJob.model.js";
 
 export const createJob = async (req, res) => {
-  const { user } = req.user;
+  const  user  = req.user;
   const { title, description, budget, skillsRequired, status } = req.body;
 
   if (!title || !description || !budget || !skillsRequired) {
@@ -38,7 +38,7 @@ export const createJob = async (req, res) => {
 
 export const getJobApplications = async (req, res) => {
   const { id: jobId } = req.params;
-  const { user } = req.user;
+  const  user  = req.user;
 
   if (!jobId) {
     return res.status(400).json({
@@ -51,7 +51,7 @@ export const getJobApplications = async (req, res) => {
 
     const job = await Job.findById(jobId);
 
-    const isCurrentEmployer = job.employer.toString() === user._id;
+    const isCurrentEmployer = job.employer.toString() === user._id.toString();
 
     if (!isCurrentEmployer) {
       return res.status(401).json({
@@ -105,7 +105,7 @@ export const getJobs = async (req, res) => {
 
 export const saveJob = async (req, res) => {
   const jobId = req.params.jobId;
-  const { user } = req.user;
+  const  user  = req.user;
 
   if (!user) {
     return res.status(401).json({
@@ -164,7 +164,7 @@ export const saveJob = async (req, res) => {
 
 export const acceptApplication = async (req, res) => {
   const { jobId, applicationId } = req.params;
-  const { user } = req.user;
+  const  user  = req.user;
 
   try {
     const job = await Job.findOne({ _id: jobId, employer: user._id });

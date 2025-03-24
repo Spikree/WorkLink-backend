@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+import { generateToken } from "../lib/utils.js";
 
 export const register = async (req,res) => {
     const {email, password, role,name, bio, skills, portfolio} = req.body;
@@ -36,15 +37,19 @@ export const register = async (req,res) => {
             profile: {name,bio,skills,portfolio}
         });
 
-        const token = jwt.sign({user: newUser},process.env.JWT_SECRET,{expiresIn: "1h"});
+        if(newUser) {
+            generateToken(newUser,res);
+            await newUser.save();
 
-        await newUser.save();
-
-        return res.json({
-            user: newUser,
-            token,
-            message: "Registration successfull"
-        })
+            return res.json({
+                user: newUser,
+                message: "Registration successfull"
+            })
+        } else {
+            return res.status(400).json({
+              message: "Invalid credentials",
+            });
+        }
     } catch (error) {
         console.log("error in register controller in auth controller", error.message)
         return res.status(500).json({
@@ -86,12 +91,12 @@ export const login = async (req,res) => {
         }
 
         if(user && isMatch) {
-            const token = jwt.sign({user},process.env.JWT_SECRET,{expiresIn:"1h"});
+            generateToken(user, res);
 
             return res.status(200).json({
                 message: "Logged in successfully",
                 user,
-                token
+                
             });
         }
     } catch (error) {
@@ -103,7 +108,7 @@ export const login = async (req,res) => {
 }
 
 export const resetpassword = async (req,res) => {
-    const {user} = req.user;
+    const user = req.user;
     const { oldPassword, newPassword } = req.body;
 
     if(oldPassword === newPassword) {

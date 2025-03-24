@@ -3,7 +3,7 @@ import Job from "../models/job.model.js"
 
 export const applyJob = async (req,res) => {
     const {id: jobId} = req.params;
-    const {user} = req.user;
+    const user = req.user;
     const {bidAmount,coverLetter} = req.body;
 
     if(!bidAmount) {
