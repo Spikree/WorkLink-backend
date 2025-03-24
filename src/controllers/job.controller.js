@@ -1,6 +1,7 @@
 import Job from "../models/job.model.js";
 import Applications from "../models/application.model.js";
 import User from "../models/user.model.js";
+import savedJobsModel from "../models/savedJobs.model.js";
 
 export const createJob = async (req, res) => {
   const { user } = req.user;
@@ -85,18 +86,77 @@ export const getJobs = async (req, res) => {
     });
 
     const jobsWithEmployerNames = jobs.map((job) => ({
-        ...job.toObject(),
-        employerName: employerMap[job.employer.toString()] || "Unknown",
+      ...job.toObject(),
+      employerName: employerMap[job.employer.toString()] || "Unknown",
     }));
 
     return res.status(200).json({
-        message: "Fetched All Jobs Sucessfully",
-        jobs: jobsWithEmployerNames
-    })
+      message: "Fetched All Jobs Sucessfully",
+      jobs: jobsWithEmployerNames,
+    });
   } catch (error) {
     console.log("Error in job controller at getJobs" + error);
     return res.status(500).json({
-        message : "Internal Server Error"
-    })
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export const saveJob = async (req, res) => {
+  const jobId = req.params.jobId;
+  const { user } = req.user;
+
+  if (!user) {
+    return res.status(401).json({
+      message: "Unauthorised Please login again",
+    });
+  }
+
+  if (!jobId) {
+    return res.status(400).json({
+      message: "jobId are required",
+    });
+  }
+
+  try {
+    const existingJob = await savedJobsModel.findOne({
+      jobId,
+      freelancer: user._id,
+    });
+
+    if (existingJob) {
+      await savedJobsModel.deleteOne({ jobId: jobId });
+      return res.status(200).json({ message: "Job removed from saved jobs." });
+    }
+
+    const getJob = await Job.findById(jobId);
+
+    if (!getJob) {
+      return res.status(404).json({
+        message: "Job not found",
+      });
+    }
+
+    const jobTitle = getJob.title;
+    const jobDescription = getJob.description;
+
+    const savedJobs = await savedJobsModel.create({
+      jobId: jobId,
+      jobTitle: jobTitle,
+      jobDescription: jobDescription,
+      freelancer: user,
+    });
+
+    savedJobs.save();
+
+    return res.status(200).json({
+      message: "Job saved",
+      savedJobs,
+    });
+  } catch (error) {
+    console.log("error in job controller at saveJob" + error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 };
