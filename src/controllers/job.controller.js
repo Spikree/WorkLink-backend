@@ -2,6 +2,7 @@ import Job from "../models/job.model.js";
 import Applications from "../models/application.model.js";
 import User from "../models/user.model.js";
 import savedJobsModel from "../models/savedJobs.model.js";
+import CurrentJob from "../models/currentJob.model.js";
 
 export const createJob = async (req, res) => {
   const { user } = req.user;
@@ -157,6 +158,72 @@ export const saveJob = async (req, res) => {
     console.log("error in job controller at saveJob" + error);
     return res.status(500).json({
       message: "Internal server error",
+    });
+  }
+};
+
+export const acceptApplication = async (req, res) => {
+  const { jobId, applicationId } = req.params;
+  const { user } = req.user;
+
+  try {
+    const job = await Job.findOne({ _id: jobId, employer: user._id });
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Job Not Found",
+      });
+    }
+
+    if (job.status !== "open") {
+      return res.status(400).json({
+        message: "You cannot accept a application for a job that is not open",
+      });
+    }
+
+    const application = await Applications.findOne({
+      _id: applicationId,
+      job: jobId,
+    });
+
+    if (!application) {
+      return res.status(404).json({
+        message: "No Application Found",
+      });
+    }
+
+    application.status = "accepted";
+
+    await application.save();
+
+    await Applications.updateMany(
+      { job: jobId, _id: { $ne: applicationId } },
+      { status: "rejected" }
+    );
+
+    job.status = "in progress";
+
+    await job.save();
+
+    const currJob = new CurrentJob({
+      jobId: jobId,
+      freelancer: application.freelancer,
+      jobTitle: job.title,
+      jobDescription: job.description,
+      employer: job.employer,
+      payCheck: application.bidAmount,
+    });
+
+    currJob.save();
+
+    return res.status(200).json({
+      message: "Application Accepted Sucessfully",
+      application,
+    });
+  } catch (error) {
+    console.log("error in job controller at accept Application", error);
+    return res.status(500).json({
+      message: "Internal server error.",
     });
   }
 };
