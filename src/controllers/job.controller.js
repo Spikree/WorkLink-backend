@@ -3,6 +3,7 @@ import Applications from "../models/application.model.js";
 import User from "../models/user.model.js";
 import savedJobsModel from "../models/savedJobs.model.js";
 import CurrentJob from "../models/currentJob.model.js";
+import FinishedJob from "../models/finishedJob.model.js";
 
 export const createJob = async (req, res) => {
   const  user  = req.user;
@@ -227,3 +228,123 @@ export const acceptApplication = async (req, res) => {
     });
   }
 };
+
+export const cancelAcceptedApplication = async (req,res) => {
+  const {jobId,applicationId} = req.params;
+  const user = req.user;
+
+  try {
+    const job = await Job.findOne({_id: jobId,employer: user._id});
+
+    if(!job) {
+      return res.status(404).json({
+        message: "Job Not Found"
+      });
+    }
+
+    const application = Applications.findOne({_id: applicationId, job: jobId});
+
+    if(!application || application.status !== "accepted") {
+      return res.status(404).json({
+        message: "This Application Was Not Accepted"
+      });
+    }
+
+    application.status = "pending"
+    await application.save();
+
+    job.status = "open"
+    await job.save();
+
+    await Applications.updateMany({
+      job:jobId,status: "rejected"
+    },{
+      status: "pending"
+    });
+
+    await CurrentJob.deleteOne({
+      userId: user._id,
+      jobId: jobId
+    });
+
+    return res.status(200).json({
+      message : "Accepted Application Cancelled"
+    })
+  } catch (error) {
+    console.log("Error in job controller in cancel accepted application" + error);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    })
+  }
+}
+
+export const jobFinished = async (req,res) => {
+  const user = req.user;
+  const {jobId} = req.params;
+
+  try {
+    const job = await Job.findById(jobId);
+
+    if(user._id !== job._id) {
+      return res.status(400).json({
+        message: "You are not the owner of this job"
+      })
+    }
+
+    if(!job) {
+      return res.status(404).json({
+        message: "Job Not Found"
+      })
+    }
+
+    const currentJob = await CurrentJob.findOne({jobId:jobId})
+
+    if(!currentJob) {
+      return res.status(400).json({
+        message: "This Job Was Not Accepted By Anybody"
+      })
+    }
+
+    if(job.status !== "completed") {
+      return res.status(400).json({
+        message: "Job Must Be Marked Completed First"
+      })
+    }
+
+    await Applications.findOneAndDelete({
+      job: jobId
+    });
+
+    const finJob = await FinishedJob.findOne({
+      jobId: job._id,
+      freelancer: currJob.freelancer,
+    })
+
+    if(finJob) {
+      return res.status(400).json({
+        message: "The Job Was Marked Finished Already"
+      })
+    }
+
+    const finishedJob = new FinishedJob({
+      jobTitle: job.title,
+      jobDescription: job.description,
+      jobId: job._id,
+      freelancer: currJob.freelancer,
+    });
+
+    await finishedJob.save();
+
+    await currentJob.deleteOne({_id: currentJob._id});
+
+    return res.status(201).json({
+      message: "Job Marked Finished Sucessfully",
+      finishedJob
+    })
+  } catch (error) {
+    console.log("Error in job controller at job finished controller" + error);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    })
+  }
+}
