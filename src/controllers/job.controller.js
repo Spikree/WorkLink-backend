@@ -6,7 +6,7 @@ import CurrentJob from "../models/currentJob.model.js";
 import FinishedJob from "../models/finishedJob.model.js";
 
 export const createJob = async (req, res) => {
-  const  user  = req.user;
+  const user = req.user;
   const { title, description, budget, skillsRequired, status } = req.body;
 
   if (!title || !description || !budget || !skillsRequired) {
@@ -39,7 +39,7 @@ export const createJob = async (req, res) => {
 
 export const getJobApplications = async (req, res) => {
   const { id: jobId } = req.params;
-  const  user  = req.user;
+  const user = req.user;
 
   if (!jobId) {
     return res.status(400).json({
@@ -106,7 +106,7 @@ export const getJobs = async (req, res) => {
 
 export const saveJob = async (req, res) => {
   const jobId = req.params.jobId;
-  const  user  = req.user;
+  const user = req.user;
 
   if (!user) {
     return res.status(401).json({
@@ -165,7 +165,7 @@ export const saveJob = async (req, res) => {
 
 export const acceptApplication = async (req, res) => {
   const { jobId, applicationId } = req.params;
-  const  user  = req.user;
+  const user = req.user;
 
   try {
     const job = await Job.findOne({ _id: jobId, employer: user._id });
@@ -229,101 +229,110 @@ export const acceptApplication = async (req, res) => {
   }
 };
 
-export const cancelAcceptedApplication = async (req,res) => {
-  const {jobId,applicationId} = req.params;
+export const cancelAcceptedApplication = async (req, res) => {
+  const { jobId, applicationId } = req.params;
   const user = req.user;
 
   try {
-    const job = await Job.findOne({_id: jobId,employer: user._id});
+    const job = await Job.findOne({ _id: jobId, employer: user._id });
 
-    if(!job) {
+    if (!job) {
       return res.status(404).json({
-        message: "Job Not Found"
+        message: "Job Not Found",
       });
     }
 
-    const application = Applications.findOne({_id: applicationId, job: jobId});
+    const application = Applications.findOne({
+      _id: applicationId,
+      job: jobId,
+    });
 
-    if(!application || application.status !== "accepted") {
+    if (!application || application.status !== "accepted") {
       return res.status(404).json({
-        message: "This Application Was Not Accepted"
+        message: "This Application Was Not Accepted",
       });
     }
 
-    application.status = "pending"
+    application.status = "pending";
     await application.save();
 
-    job.status = "open"
+    job.status = "open";
     await job.save();
 
-    await Applications.updateMany({
-      job:jobId,status: "rejected"
-    },{
-      status: "pending"
-    });
+    await Applications.updateMany(
+      {
+        job: jobId,
+        status: "rejected",
+      },
+      {
+        status: "pending",
+      }
+    );
 
     await CurrentJob.deleteOne({
       userId: user._id,
-      jobId: jobId
+      jobId: jobId,
     });
 
     return res.status(200).json({
-      message : "Accepted Application Cancelled"
-    })
+      message: "Accepted Application Cancelled",
+    });
   } catch (error) {
-    console.log("Error in job controller in cancel accepted application" + error);
+    console.log(
+      "Error in job controller in cancel accepted application" + error
+    );
     return res.status(500).json({
-      message: "Internal Server Error"
-    })
+      message: "Internal Server Error",
+    });
   }
-}
+};
 
-export const jobFinished = async (req,res) => {
+export const jobFinished = async (req, res) => {
   const user = req.user;
-  const {jobId} = req.params;
+  const { jobId } = req.params;
 
   try {
     const job = await Job.findById(jobId);
 
-    if(user._id !== job._id) {
+    if (user._id !== job._id) {
       return res.status(400).json({
-        message: "You are not the owner of this job"
-      })
+        message: "You are not the owner of this job",
+      });
     }
 
-    if(!job) {
+    if (!job) {
       return res.status(404).json({
-        message: "Job Not Found"
-      })
+        message: "Job Not Found",
+      });
     }
 
-    const currentJob = await CurrentJob.findOne({jobId:jobId})
+    const currentJob = await CurrentJob.findOne({ jobId: jobId });
 
-    if(!currentJob) {
+    if (!currentJob) {
       return res.status(400).json({
-        message: "This Job Was Not Accepted By Anybody"
-      })
+        message: "This Job Was Not Accepted By Anybody",
+      });
     }
 
-    if(job.status !== "completed") {
+    if (job.status !== "completed") {
       return res.status(400).json({
-        message: "Job Must Be Marked Completed First"
-      })
+        message: "Job Must Be Marked Completed First",
+      });
     }
 
     await Applications.findOneAndDelete({
-      job: jobId
+      job: jobId,
     });
 
     const finJob = await FinishedJob.findOne({
       jobId: job._id,
       freelancer: currJob.freelancer,
-    })
+    });
 
-    if(finJob) {
+    if (finJob) {
       return res.status(400).json({
-        message: "The Job Was Marked Finished Already"
-      })
+        message: "The Job Was Marked Finished Already",
+      });
     }
 
     const finishedJob = new FinishedJob({
@@ -335,16 +344,69 @@ export const jobFinished = async (req,res) => {
 
     await finishedJob.save();
 
-    await currentJob.deleteOne({_id: currentJob._id});
+    await currentJob.deleteOne({ _id: currentJob._id });
 
     return res.status(201).json({
       message: "Job Marked Finished Sucessfully",
-      finishedJob
-    })
+      finishedJob,
+    });
   } catch (error) {
     console.log("Error in job controller at job finished controller" + error);
     return res.status(500).json({
-      message: "Internal Server Error"
-    })
+      message: "Internal Server Error",
+    });
   }
-}
+};
+
+export const getOnGoingJob = async (req, res) => {
+  const user = req.user;
+
+  try {
+    const jobs = await CurrentJob.find({
+      employer: user._id,
+    });
+
+    if (!jobs) {
+      return res.status(200).json({
+        message: "You Dont have On Going Jobs",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Fetched current jobs",
+      jobs,
+    });
+  } catch (error) {
+    console.log("Error In Job Controller at get on going job" + error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getCreatedJob = async (req, res) => {
+  const user = req.user;
+
+  try {
+    const jobs = await Job.find({
+      status: "open",
+      employer: user._id,
+    });
+
+    if (jobs.length === 0) {
+      return res.status(200).json({
+        message: "You didnt create any job yet",
+      });
+    }
+
+    return res.status(201).json({
+      message: "Fetched all jobs sucessfully",
+      jobs,
+    });
+  } catch (error) {
+    console.log("Error in job controlller at get created jobs" + error);
+    return res.status(400).json({
+      message: "Internal server error",
+    });
+  }
+};
