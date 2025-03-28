@@ -25,7 +25,7 @@ app.use("/auth",authRouter);
 app.use("/profile",profileRouter);
 app.use("/job",jobRouter);
 app.use("/application",applicationRouter);
-app.use("/review",reviewRouter )
+app.use("/review",reviewRouter);
 
 app.get("/",(req,res) => {
     res.send("Backend working");

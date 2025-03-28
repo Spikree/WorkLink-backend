@@ -77,3 +77,46 @@ export const editUser = async (req,res) => {
         })
     }
 }
+
+export const getUserProfile = async (req,res) => {
+    const {userId} = req.params;
+
+    try {
+        const userDetails = await User.findById(userId);
+
+        if(!userDetails) {
+            return res.stale(404).json({
+                message: "User Not Fouund"
+            });
+        }
+
+        const ratings = await  Rating.find({
+            reviewOf: userDetails._id,
+        });
+
+        const totalRatings = ratings.length;
+
+        let averageRating = 0;
+
+        if (totalRatings > 0) {
+            const sumOfRatings = ratings.reduce(
+                (sum, rating) => sum + rating.rating,
+                0
+            );
+            averageRating = (sumOfRatings / totalRatings).toFixed(1); // Rounds to 1 decimal place
+        }
+
+        return res.status(200).json({
+            message: "Fteched user details sucessfully",
+            userDetails,
+            ratingStats: {
+                averageRating: parseFloat(averageRating),
+                totalRatings,
+            },
+        });
+    } catch (error) {
+        console.log("Error in profile controller in get user profile" + error);
+        return res.status(500).json(
+        );
+    }
+}
