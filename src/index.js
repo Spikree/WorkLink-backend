@@ -7,6 +7,8 @@ import authRouter from "./routes/auth.route.js";
 import profileRouter from "./routes/profile.route.js"
 import jobRouter from "./routes/job.route.js"
 import applicationRouter from "./routes/application.route.js"
+import reviewRouter from "./routes/review.route.js";
+
 import connectDb from "./lib/connectToDb.js";
 
 dotenv.config();
@@ -23,6 +25,7 @@ app.use("/auth",authRouter);
 app.use("/profile",profileRouter);
 app.use("/job",jobRouter);
 app.use("/application",applicationRouter);
+app.use("/review",reviewRouter )
 
 app.get("/",(req,res) => {
     res.send("Backend working");
