@@ -1,7 +1,18 @@
 import express from "express";
 import verifyToken from "../middleware/verifytoken.middleware.js";
 import checkEmployerRole from "../middleware/checkEmployerRole.middleware.js";
-import { acceptApplication, cancelAcceptedApplication, createJob, getJobApplications, getJobs, jobFinished, saveJob,getOnGoingJob, getCreatedJob } from "../controllers/job.controller.js";
+import {
+    acceptApplication,
+    cancelAcceptedApplication,
+    createJob,
+    getJobApplications,
+    getJobs,
+    jobFinished,
+    saveJob,
+    getOnGoingJob,
+    getCreatedJob,
+    deletJob
+} from "../controllers/job.controller.js";
 import checkFreelancerRole from "../middleware/checkFreelancerRole.middleware.js";
 
 const router = express.Router();
@@ -15,5 +26,6 @@ router.post("/cancelAcceptedApplication/:jobId/:applicationId",verifyToken,check
 router.post("/jobFinished/:jobId",verifyToken,checkEmployerRole,jobFinished);
 router.get("/getOnGoingJobs",verifyToken,checkEmployerRole,getOnGoingJob);
 router.get("/getCreatedJobs", verifyToken,checkEmployerRole,getCreatedJob);
+router.delete("/deleteJob/:jobId",verifyToken,checkEmployerRole,deletJob);
 
 export default router;

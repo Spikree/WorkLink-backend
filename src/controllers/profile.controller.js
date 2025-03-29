@@ -78,7 +78,7 @@ export const editUser = async (req,res) => {
     }
 }
 
-export const getUserProfile = async (req,res) => {
+export const   getUserProfile = async (req,res) => {
     const {userId} = req.params;
 
     try {

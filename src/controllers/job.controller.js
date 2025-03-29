@@ -410,3 +410,41 @@ export const getCreatedJob = async (req, res) => {
     });
   }
 };
+
+export const deletJob = async (req,res) => {
+    const user = req.user;
+    const { jobId } = req.params;
+
+    if(!jobId) {
+      return res.status(400).json({
+        message: "Job Id is missing",
+      })
+    }
+
+    try {
+      const job = await Job.findById(jobId);
+
+      if(!job) {
+        return res.status(404).json({
+          message: "Job Not Found",
+        })
+      }
+
+      if(!job.employer.equals(user._id)) {
+        return res.status(400).json({
+          message: "You Are Not Authorized To Delete This Job",
+        })
+      }
+
+      await job.deleteOne();
+
+      return res.status(200).json({
+        message: "Job Deleted",
+      })
+    } catch (error) {
+      console.log("Error in job controller in delete job" + error);
+      return res.status(500).json({
+        message: "Internal server error",
+      })
+    }
+}
