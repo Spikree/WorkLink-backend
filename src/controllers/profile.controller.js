@@ -1,5 +1,6 @@
 import User from "../models/user.model.js";
 import Rating from "../models/rating.model.js";
+import Job from "../models/job.model.js";
 
 export const getUser = async (req, res) => {
   const  user  = req.user;
@@ -118,5 +119,37 @@ export const   getUserProfile = async (req,res) => {
         console.log("Error in profile controller in get user profile" + error);
         return res.status(500).json(
         );
+    }
+}
+
+export const getEmployer = async (req,res) => {
+    const jobId = req.params.id;
+
+    try {
+        const employer = await Job.findById(jobId).populate('employer');
+
+        return res.status(200).json({
+            message: "Employer found",
+            employer
+        });
+    } catch (error) {
+        console.log("error in get Employer Route", error.message)
+        return res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+export const getUserById = async (req,res) => {
+    const userId = req.params.id;
+
+    try {
+        const user = await User.findById(userId);
+
+        return res.status(200).json({
+            message: "User found",
+            user
+        });
+    } catch (error) {
+        console.log("error in get get user Route", error.message)
+        return res.status(500).json({ message: "Internal server error" });
     }
 }
