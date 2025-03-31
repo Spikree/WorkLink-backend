@@ -16,9 +16,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 const PORT = process.env.PORT || 5000;
-app.use(cors({
-    origin: "http://localhost:5173",
-}));
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 connectDb();
 
 app.use("/auth",authRouter);
