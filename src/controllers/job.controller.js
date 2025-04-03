@@ -37,6 +37,32 @@ export const createJob = async (req, res) => {
   }
 };
 
+export const getJob = async (req,res) => {
+  const jobId = req.params.id
+
+  console.log("get job")
+  try {
+    const job = await Job.findById(jobId).lean();
+
+    if(!job) {
+      return res.status(404).json({
+        message: "Job Not Found"
+      })
+    }
+      
+    return res.status(200).json({
+      message: "Job Found Successfully",
+      job
+    })
+    
+  } catch (error) {
+    console.log("Error in Job Controller at get job" + error);
+    return res.status(500).json({
+      message:"Internal Server Error"
+    })
+  }
+}
+
 export const getJobApplications = async (req, res) => {
   const { id: jobId } = req.params;
   const user = req.user;

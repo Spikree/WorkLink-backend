@@ -11,13 +11,15 @@ import {
     saveJob,
     getOnGoingJob,
     getCreatedJob,
-    deletJob
+    deletJob,
+    getJob
 } from "../controllers/job.controller.js";
 import checkFreelancerRole from "../middleware/checkFreelancerRole.middleware.js";
 
 const router = express.Router();
 
 router.post("/createJob", verifyToken,checkEmployerRole,createJob);
+router.get("/getJob/:id",verifyToken,getJob);
 router.get("/getJobs",verifyToken,checkFreelancerRole,getJobs);
 router.get("/getApplications/:id",verifyToken,checkEmployerRole,getJobApplications);
 router.post("/saveJob/:jobId",verifyToken,checkFreelancerRole,saveJob);
