@@ -40,14 +40,21 @@ export const createJob = async (req, res) => {
 export const getJob = async (req,res) => {
   const jobId = req.params.id
 
-  console.log("get job")
   try {
-    const job = await Job.findById(jobId).lean();
+    const findJob = await Job.findById(jobId).lean();
 
-    if(!job) {
+    if(!findJob) {
       return res.status(404).json({
         message: "Job Not Found"
       })
+    }
+
+    const employerId = findJob.employer;
+
+    const employer = await User.findById(employerId);
+
+    const job = {
+      ...findJob, employerName: employer.profile.name
     }
       
     return res.status(200).json({
