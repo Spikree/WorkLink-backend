@@ -6,16 +6,16 @@ export const getUser = async (req, res) => {
   const  user  = req.user;
 
   try {
-    const userDetails = await User.findById(user._id).select("-password").lean();
+    const userDetail = await User.findById(user._id).select("-password").lean();
 
-    if (!userDetails) {
+    if (!userDetail) {
       return res.status(404).json({
         message: "No User Found",
       });
     }
 
     const ratings = await Rating.find({
-      reviewOf: userDetails._id,
+      reviewOf: userDetail._id,
     });
 
     const totalRatings = ratings.length;
@@ -30,13 +30,15 @@ export const getUser = async (req, res) => {
       averageRating = (sumOfRatings / totalRatings).toFixed(1);
     }
 
+    const userDetails = {
+        ...userDetail,
+        averageRating,
+        totalRatings
+    }
+
     return res.status(200).json({
         message: "Fetch User Details Sucessfully",
         userDetails,
-        ratingStats: {
-            averageRating: parseFloat(averageRating),
-            totalRatings
-        }
     })
   } catch (error) {
     console.log("Error in profile controller in get user" + error);
