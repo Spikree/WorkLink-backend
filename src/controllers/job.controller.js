@@ -37,16 +37,16 @@ export const createJob = async (req, res) => {
   }
 };
 
-export const getJob = async (req,res) => {
-  const jobId = req.params.id
+export const getJob = async (req, res) => {
+  const jobId = req.params.id;
 
   try {
     const findJob = await Job.findById(jobId).lean();
 
-    if(!findJob) {
+    if (!findJob) {
       return res.status(404).json({
-        message: "Job Not Found"
-      })
+        message: "Job Not Found",
+      });
     }
 
     const employerId = findJob.employer;
@@ -54,21 +54,21 @@ export const getJob = async (req,res) => {
     const employer = await User.findById(employerId);
 
     const job = {
-      ...findJob, employerName: employer.profile.name
-    }
-      
+      ...findJob,
+      employerName: employer.profile.name,
+    };
+
     return res.status(200).json({
       message: "Job Found Successfully",
-      job
-    })
-    
+      job,
+    });
   } catch (error) {
     console.log("Error in Job Controller at get job" + error);
     return res.status(500).json({
-      message:"Internal Server Error"
-    })
+      message: "Internal Server Error",
+    });
   }
-}
+};
 
 export const getJobApplications = async (req, res) => {
   const { id: jobId } = req.params;
@@ -444,40 +444,58 @@ export const getCreatedJob = async (req, res) => {
   }
 };
 
-export const deletJob = async (req,res) => {
-    const user = req.user;
-    const { jobId } = req.params;
+export const deletJob = async (req, res) => {
+  const user = req.user;
+  const { jobId } = req.params;
 
-    if(!jobId) {
+  if (!jobId) {
+    return res.status(400).json({
+      message: "Job Id is missing",
+    });
+  }
+
+  try {
+    const job = await Job.findById(jobId);
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Job Not Found",
+      });
+    }
+
+    if (!job.employer.equals(user._id)) {
       return res.status(400).json({
-        message: "Job Id is missing",
-      })
+        message: "You Are Not Authorized To Delete This Job",
+      });
     }
 
-    try {
-      const job = await Job.findById(jobId);
+    await job.deleteOne();
 
-      if(!job) {
-        return res.status(404).json({
-          message: "Job Not Found",
-        })
-      }
+    return res.status(200).json({
+      message: "Job Deleted",
+    });
+  } catch (error) {
+    console.log("Error in job controller in delete job" + error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
 
-      if(!job.employer.equals(user._id)) {
-        return res.status(400).json({
-          message: "You Are Not Authorized To Delete This Job",
-        })
-      }
+export const getAppliedJobs = async (req, res) => {
+  const user = req.user;
 
-      await job.deleteOne();
+  try {
+    const appliedJobs = await Applications.find({freelancer: user._id});
 
-      return res.status(200).json({
-        message: "Job Deleted",
-      })
-    } catch (error) {
-      console.log("Error in job controller in delete job" + error);
-      return res.status(500).json({
-        message: "Internal server error",
-      })
-    }
-}
+    return res.status(200).json({
+      message: "Fetched All Applied Jobs Sucessfully",
+      appliedJobs
+    })
+  } catch (error) {
+    console.log("Error in job controller in get applied jobs" + error);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    })
+  }
+};

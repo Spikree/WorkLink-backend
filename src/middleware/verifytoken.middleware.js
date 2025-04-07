@@ -33,7 +33,7 @@ const verifyToken = async (req,res,next) => {
       } catch (error) {
         console.log("error in verifyToken middleware",error)
         res.status(500).json({
-            message: "Internal server error"
+            message: "Invalid User"
         })
       }
 }
