@@ -555,3 +555,21 @@ export const getSavedJobs = async (req,res) => {
     })
   }
 }
+
+export const getCurrentJobs = async (req,res) => {
+  const user = req.user;
+
+  try {
+    const currentJobs = await CurrentJob.find({freelancer: user._id});
+
+    return res.status(200).json({
+      message: "Fetched Current Jobs",
+      currentJobs
+    })
+  } catch (error) {
+    console.log("Error in job controller at get current jobs" + error);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    })
+  }
+}
