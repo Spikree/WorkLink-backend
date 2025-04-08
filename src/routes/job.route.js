@@ -14,7 +14,8 @@ import {
     deletJob,
     getJob,
     getAppliedJobs,
-    getFinishedJobs
+    getFinishedJobs,
+    getSavedJobs
 } from "../controllers/job.controller.js";
 import checkFreelancerRole from "../middleware/checkFreelancerRole.middleware.js";
 
@@ -33,5 +34,6 @@ router.get("/getCreatedJobs", verifyToken,checkEmployerRole,getCreatedJob);
 router.delete("/deleteJob/:jobId",verifyToken,checkEmployerRole,deletJob);
 router.get("/getAppliedJobs", verifyToken,checkFreelancerRole,getAppliedJobs);
 router.get("/getFinishedJobs", verifyToken,checkFreelancerRole ,getFinishedJobs);
+router.get("/getSavedJobs", verifyToken, checkFreelancerRole, getSavedJobs);
 
 export default router;
