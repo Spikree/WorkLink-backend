@@ -16,7 +16,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 const PORT = process.env.PORT || 5000;
-app.use(cors({ origin: "https://worklink-client.onrender.com/", credentials: true }));
+app.use(cors({ origin: "https://worklink-client.onrender.com", credentials: true }));
 connectDb();
 
 app.use("/auth",authRouter);
