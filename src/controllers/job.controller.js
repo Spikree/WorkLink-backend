@@ -486,7 +486,21 @@ export const getAppliedJobs = async (req, res) => {
   const user = req.user;
 
   try {
-    const appliedJobs = await Applications.find({freelancer: user._id});
+    let appliedJobs = await Applications.find({freelancer: user._id});
+
+    const jobIds = appliedJobs.map(app => app.job);
+
+    const jobs = await Job.find({ _id: { $in: jobIds } });
+
+    const jobMap = new Map();
+    jobs.forEach(job => {
+      jobMap.set(job._id.toString(), job.title);
+    });
+
+    appliedJobs = appliedJobs.map(app => ({
+      ...app._doc,
+      jobTitle: jobMap.get(app.job.toString()) || "Title not found"
+    }));
 
     return res.status(200).json({
       message: "Fetched All Applied Jobs Sucessfully",
@@ -499,3 +513,27 @@ export const getAppliedJobs = async (req, res) => {
     })
   }
 };
+
+export const getFinishedJobs = async (req,res) => {
+  const user = req.user;
+
+  try {
+    const finishedJobs = await FinishedJob.find({freelancer: user._id});
+
+    if(!finishedJobs) {
+      return res.status(404).json({
+        message: "No finished jobs found"
+      })
+    }
+
+    return res.status(200).json({
+      message:"Fetched All Finished Jobs",
+      finishedJobs
+    })
+  } catch (error) {
+    console.log("error in job controller at get finished job");
+    return res.status(500).json({
+      message: "Internal Server Error"
+    })
+  }
+}
