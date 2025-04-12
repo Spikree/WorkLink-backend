@@ -16,7 +16,7 @@ import {
     getAppliedJobs,
     getFinishedJobs,
     getSavedJobs,
-    getCurrentJobs
+    getCurrentJobs,
 } from "../controllers/job.controller.js";
 import checkFreelancerRole from "../middleware/checkFreelancerRole.middleware.js";
 

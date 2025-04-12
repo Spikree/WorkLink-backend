@@ -432,9 +432,25 @@ export const getCreatedJob = async (req, res) => {
       });
     }
 
+    const employerIds = jobs.map((job) => job.employer);
+
+    const employers = await User.find({ _id: { $in: employerIds } });
+
+    const employerMap = {};
+
+    employers.forEach((employer) => {
+      employerMap[employer._id.toString()] =
+        employer.profile?.name || "Unknown";
+    });
+
+    const jobsWithEmployerNames = jobs.map((job) => ({
+      ...job.toObject(),
+      employerName: employerMap[job.employer.toString()] || "Unknown",
+    }));
+
     return res.status(201).json({
       message: "Fetched all jobs sucessfully",
-      jobs,
+      jobs: jobsWithEmployerNames,
     });
   } catch (error) {
     console.log("Error in job controlller at get created jobs" + error);
@@ -486,90 +502,90 @@ export const getAppliedJobs = async (req, res) => {
   const user = req.user;
 
   try {
-    let appliedJobs = await Applications.find({freelancer: user._id});
+    let appliedJobs = await Applications.find({ freelancer: user._id });
 
-    const jobIds = appliedJobs.map(app => app.job);
+    const jobIds = appliedJobs.map((app) => app.job);
 
     const jobs = await Job.find({ _id: { $in: jobIds } });
 
     const jobMap = new Map();
-    jobs.forEach(job => {
+    jobs.forEach((job) => {
       jobMap.set(job._id.toString(), job.title);
     });
 
-    appliedJobs = appliedJobs.map(app => ({
+    appliedJobs = appliedJobs.map((app) => ({
       ...app._doc,
-      jobTitle: jobMap.get(app.job.toString()) || "Title not found"
+      jobTitle: jobMap.get(app.job.toString()) || "Title not found",
     }));
 
     return res.status(200).json({
       message: "Fetched All Applied Jobs Sucessfully",
-      appliedJobs
-    })
+      appliedJobs,
+    });
   } catch (error) {
     console.log("Error in job controller in get applied jobs" + error);
     return res.status(500).json({
-      message: "Internal Server Error"
-    })
+      message: "Internal Server Error",
+    });
   }
 };
 
-export const getFinishedJobs = async (req,res) => {
+export const getFinishedJobs = async (req, res) => {
   const user = req.user;
 
   try {
-    const finishedJobs = await FinishedJob.find({freelancer: user._id});
+    const finishedJobs = await FinishedJob.find({ freelancer: user._id });
 
-    if(!finishedJobs) {
+    if (!finishedJobs) {
       return res.status(404).json({
-        message: "No finished jobs found"
-      })
+        message: "No finished jobs found",
+      });
     }
 
     return res.status(200).json({
-      message:"Fetched All Finished Jobs",
-      finishedJobs
-    })
+      message: "Fetched All Finished Jobs",
+      finishedJobs,
+    });
   } catch (error) {
     console.log("error in job controller at get finished job");
     return res.status(500).json({
-      message: "Internal Server Error"
-    })
+      message: "Internal Server Error",
+    });
   }
-}
+};
 
-export const getSavedJobs = async (req,res) => {
+export const getSavedJobs = async (req, res) => {
   const user = req.user;
 
   try {
-    const savedJobs = await savedJobsModel.find({freelancer: user._id});
+    const savedJobs = await savedJobsModel.find({ freelancer: user._id });
 
     return res.status(200).json({
       message: "Fetched Saved Job",
-      savedJobs
-    })
+      savedJobs,
+    });
   } catch (error) {
-    console.log("error in job controller at get saved jobs", error)
+    console.log("error in job controller at get saved jobs", error);
     return res.status(500).json({
-      message: "Internal Server Error"
-    })
+      message: "Internal Server Error",
+    });
   }
-}
+};
 
-export const getCurrentJobs = async (req,res) => {
+export const getCurrentJobs = async (req, res) => {
   const user = req.user;
 
   try {
-    const currentJobs = await CurrentJob.find({freelancer: user._id});
+    const currentJobs = await CurrentJob.find({ freelancer: user._id });
 
     return res.status(200).json({
       message: "Fetched Current Jobs",
-      currentJobs
-    })
+      currentJobs,
+    });
   } catch (error) {
     console.log("Error in job controller at get current jobs" + error);
     return res.status(500).json({
-      message: "Internal Server Error"
-    })
+      message: "Internal Server Error",
+    });
   }
-}
+};
