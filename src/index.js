@@ -11,8 +11,9 @@ import reviewRouter from "./routes/review.route.js";
 
 import connectDb from "./lib/connectToDb.js";
 
+import { app,server } from "./socket/socket.js";
+
 dotenv.config();
-const app = express();
 app.use(express.json());
 app.use(cookieParser());
 const PORT = process.env.PORT || 5000;
@@ -29,6 +30,6 @@ app.get("/",(req,res) => {
     res.send("Backend working");
 });
 
-app.listen(PORT,() => {
+server.listen(PORT,() => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
