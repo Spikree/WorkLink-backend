@@ -26,7 +26,42 @@ io.on("connection", (socket) => {
     if (!users.has(userId)) {
       users.set(userId, new Set());
     }
+
+    users.get(userId).add(socket.id);
+
+    console.log(`User ${userId} joined with socket Id:  ${socket.id}`);
+
+    activeUsers.add(userId);
+  });
+
+  socket.on("joinChat", (chatId) => {
+    socket.join(chatId);
+    console.log(
+      `user with socket id ${socket.id} joined chat room:: ${chatId}`
+    );
+  });
+
+  socket.on("setActiveStatus", ({ userId }) => {
+    if (!userId) return;
+
+    activeUsers.add(userId);
+  });
+
+  socket.on("disconnect", () => {
+    const userId = socket.userId;
+
+    if (userId) {
+      const userSockets = users.get(userId);
+      if (userSockets) {
+        users.delete(userId);
+        activeUsers.delete(userId);
+      }
+    }
+
+    console.log(
+      `User ${userId || "unknown"} diconnected (socket: ${socket.id})`
+    );
   });
 });
 
-export { io, server, app };
+export { io, server, app ,users};
