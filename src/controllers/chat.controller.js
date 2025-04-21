@@ -31,3 +31,32 @@ export const getMessages = async (req, res) => {
     });
   }
 };
+
+export const sendMessage = async (req,res) => {
+  const {id: receiverId} = req.params;
+  const {text} = req.body;
+  const user = req.user;
+  const myId = user._id;
+
+  try {
+    const chatId = [senderId, reciverId].sort().join('_');
+
+    const newMessage = new Message({
+      senderId,
+      receiverId,
+      text,
+      chatId
+    });
+
+    // implement socket
+
+    await newMessage.save();
+
+    res.status(200).json({
+      messages: "Message Sent Sucessfully",
+      newMessage
+    })
+  } catch (error) {
+    console.log("Error in chat controller at send message" + error)
+  }
+}
