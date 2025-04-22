@@ -62,6 +62,28 @@ io.on("connection", (socket) => {
       `User ${userId || "unknown"} diconnected (socket: ${socket.id})`
     );
   });
+
+  function sendAllActiveStatusToUser(socket) {
+    activeUsers.forEach(activeUserId => {
+      socket.emit("userActiveStatus", {
+        userId: activeUserId,
+        isActive: true
+      })
+    })
+  }
+
+  socket.on("userLogout", (userId) => {
+    if(!userId) return;
+
+    activeUsers.delete(userId);
+
+    io.emit("userActiveStatus", {
+      userId,
+      isActive: false
+    });
+
+    console.log(`user ${userId} logged out`);
+  })
 });
 
 export { io, server, app ,users};

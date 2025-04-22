@@ -39,7 +39,7 @@ export const sendMessage = async (req,res) => {
   const myId = user._id;
 
   try {
-    const chatId = [senderId, reciverId].sort().join('_');
+    const chatId = [senderId, receiverId].sort().join('_');
 
     const newMessage = new Message({
       senderId,
