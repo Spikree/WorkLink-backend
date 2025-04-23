@@ -13,6 +13,7 @@ const io = new Server(server, {
 
 const users = new Map();
 const activeUsers = new Set();
+const chatConnections = new Map();
 
 io.on("connection", (socket) => {
   console.log(`A user connected: ${socket.id}`);
@@ -32,6 +33,8 @@ io.on("connection", (socket) => {
     console.log(`User ${userId} joined with socket Id:  ${socket.id}`);
 
     activeUsers.add(userId);
+
+    broadcastUserStatus(userId,true)
   });
 
   socket.on("joinChat", (chatId) => {
@@ -45,7 +48,39 @@ io.on("connection", (socket) => {
     if (!userId) return;
 
     activeUsers.add(userId);
+    broadcastUserStatus(userId, true);
   });
+
+  socket.on("typing", (data) => {
+    const {senderId, receiverId, chatId} = data;
+
+    const receiverSockets = users.get(receiverId);
+
+    if(receiverSockets) {
+      receiverSockets.forEach((socketId) => {
+        io.to(socketId).emit("userTyping", {
+          senderId,
+          isTyping: true,
+          chatId
+        });
+      });
+    }
+  });
+
+  socket.on("stopTyping", (data) => {
+    const {senderId, receiverId, chatId} = data;
+
+    const receiverSockets = users.get(receiverId);
+    if(receiverSockets) {
+      receiverSockets.forEach((socketId) => {
+        io.to(socketId).emit("userTyping", {
+          senderId,
+          isTyping: false,
+          chatId
+        })
+      })
+    }
+  })
 
   socket.on("disconnect", () => {
     const userId = socket.userId;
@@ -55,6 +90,8 @@ io.on("connection", (socket) => {
       if (userSockets) {
         users.delete(userId);
         activeUsers.delete(userId);
+
+        broadcastUserStatus(userId, false)
       }
     }
 
@@ -62,6 +99,13 @@ io.on("connection", (socket) => {
       `User ${userId || "unknown"} diconnected (socket: ${socket.id})`
     );
   });
+
+  function broadcastUserStatus(userId,isActive) {
+    io.emit("userActiveStatus", {
+      userId,
+      isActive
+    });
+  }
 
   function sendAllActiveStatusToUser(socket) {
     activeUsers.forEach(activeUserId => {
@@ -81,6 +125,8 @@ io.on("connection", (socket) => {
       userId,
       isActive: false
     });
+
+    socket.disconnect(true);
 
     console.log(`user ${userId} logged out`);
   })
