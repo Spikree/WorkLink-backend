@@ -14,49 +14,57 @@ export const getMessages = async (req, res) => {
           receiverId: userToChatId,
         },
         {
-            senderId:userToChatId,
-            receiverId:myId,
+          senderId: userToChatId,
+          receiverId: myId,
         },
       ],
-    }).sort({createdAt: 1});
+    }).sort({ createdAt: 1 });
 
     return res.status(200).json({
-        messages: "Fetched All Messages",
-        messages
-    })
+      messages: "Fetched All Messages",
+      messages,
+    });
   } catch (error) {
     console.log("Error in chat controller at get messages" + error);
     return res.status(500).json({
-        messages: "Internal Server Error"
+      messages: "Internal Server Error",
     });
   }
 };
 
-export const sendMessage = async (req,res) => {
-  const {id: receiverId} = req.params;
-  const {text} = req.body;
+export const sendMessage = async (req, res) => {
+  const { id: receiverId } = req.params;
+  const { text } = req.body;
   const user = req.user;
   const myId = user._id;
 
   try {
-    const chatId = [senderId, receiverId].sort().join('_');
+    const chatId = [senderId, receiverId].sort().join("_");
 
     const newMessage = new Message({
       senderId,
       receiverId,
       text,
-      chatId
+      chatId,
     });
-
-    // implement socket
 
     await newMessage.save();
 
+    const receiverSockets = user.get(receiverId);
+    if (receiverSockets) {
+      receiverSockets.forEach((socketId) => {
+        io.to(socketId).emit("newMessage", {
+          ...newMessage.toObject(),
+          chatId,
+        });
+      });
+    }
+
     res.status(200).json({
       messages: "Message Sent Sucessfully",
-      newMessage
-    })
+      newMessage,
+    });
   } catch (error) {
-    console.log("Error in chat controller at send message" + error)
+    console.log("Error in chat controller at send message" + error);
   }
-}
+};
