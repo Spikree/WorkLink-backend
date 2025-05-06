@@ -1,4 +1,4 @@
-import Message from "../models/chat.model";
+import Message from "../models/chat.model.js";
 import { io, users } from "../socket/socket.js";
 
 export const getMessages = async (req, res) => {
@@ -39,10 +39,10 @@ export const sendMessage = async (req, res) => {
   const myId = user._id;
 
   try {
-    const chatId = [senderId, receiverId].sort().join("_");
+    const chatId = [myId, receiverId].sort().join("_");
 
     const newMessage = new Message({
-      senderId,
+      senderId: myId,
       receiverId,
       text,
       chatId,

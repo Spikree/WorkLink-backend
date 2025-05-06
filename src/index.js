@@ -8,6 +8,8 @@ import profileRouter from "./routes/profile.route.js"
 import jobRouter from "./routes/job.route.js"
 import applicationRouter from "./routes/application.route.js"
 import reviewRouter from "./routes/review.route.js";
+import messageRouter from "./routes/chat.route.js"
+import userDetailsRouter from "./routes/userDetails.route.js"
 
 import connectDb from "./lib/connectToDb.js";
 
@@ -25,6 +27,8 @@ app.use("/profile",profileRouter);
 app.use("/job",jobRouter);
 app.use("/application",applicationRouter);
 app.use("/review",reviewRouter);
+app.use("/message",messageRouter);
+app.use("/user", userDetailsRouter);
 
 app.get("/",(req,res) => {
     res.send("Backend working");
