@@ -17,11 +17,10 @@ const chatConnections = new Map();
 
 io.on("connection", (socket) => {
   console.log(`A user connected: ${socket.id}`);
-
   socket.on("join", (userId) => {
     if (!userId) return;
 
-    currentUserId = userId;
+    let currentUserId = userId;
     socket.userId = userId;
 
     if (!users.has(userId)) {
