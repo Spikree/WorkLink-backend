@@ -50,7 +50,7 @@ export const sendMessage = async (req, res) => {
 
     await newMessage.save();
 
-    const receiverSockets = user.get(receiverId);
+    const receiverSockets = users.get(receiverId);
     if (receiverSockets) {
       receiverSockets.forEach((socketId) => {
         io.to(socketId).emit("newMessage", {
