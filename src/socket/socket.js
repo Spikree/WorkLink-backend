@@ -6,7 +6,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://worklink-client.onrender.com/",
+    origin: "https://worklink-client.onrender.com",
     methods: ["GET", "POST"],
   },
 });
