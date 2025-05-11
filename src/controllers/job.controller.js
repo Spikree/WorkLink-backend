@@ -487,6 +487,10 @@ export const deletJob = async (req, res) => {
 
     await job.deleteOne();
 
+    // to Delete data related to deleted jobs in other models
+    const allApplicationsForDeletedJob = await Applications.findOneAndDelete({job: jobId});
+    const allSavedForDeletedJob = await savedJobsModel.findOneAndDelete({jobId:jobId});
+
     return res.status(200).json({
       message: "Job Deleted",
     });
