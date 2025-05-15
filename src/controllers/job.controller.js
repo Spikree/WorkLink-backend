@@ -593,3 +593,5 @@ export const getCurrentJobs = async (req, res) => {
     });
   }
 };
+
+// TODO implement edit job status route
