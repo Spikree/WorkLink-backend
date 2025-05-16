@@ -488,8 +488,12 @@ export const deletJob = async (req, res) => {
     await job.deleteOne();
 
     // to Delete data related to deleted jobs in other models
-    const allApplicationsForDeletedJob = await Applications.findOneAndDelete({job: jobId});
-    const allSavedForDeletedJob = await savedJobsModel.findOneAndDelete({jobId:jobId});
+    const allApplicationsForDeletedJob = await Applications.findOneAndDelete({
+      job: jobId,
+    });
+    const allSavedForDeletedJob = await savedJobsModel.findOneAndDelete({
+      jobId: jobId,
+    });
 
     return res.status(200).json({
       message: "Job Deleted",
@@ -595,3 +599,43 @@ export const getCurrentJobs = async (req, res) => {
 };
 
 // TODO implement edit job status route
+export const editJobStatus = async (req, res) => {
+  const { jobId } = req.params;
+  const user = req.user;
+  const { status } = req.body;
+
+  if(!jobId) {
+    return res.status(400).json({
+      message: "Job ID is required"
+    });
+  }
+
+  const validStatuses = ["open","in progress", "completed", "cancelled"];
+  if(!status || !validStatuses.includes(status)) {
+    return res.status(400).json({
+      message: "Invalid Status. Status must be one of the following: open, in progress, completed and cancelled"
+    });
+  }
+
+  try {
+    const getJob = await Job.findById(jobId);
+
+    if(getJob.employer.toString() !== user._id.toString()) {
+      return res.status(401).json({
+        message: "You are not authorised to edit this job"
+      });
+    }
+
+    const job = await Job.findByIdAndUpdate(jobId, {status: status}, {new: true});
+
+    return res.status(200).json({
+      message: "Job Status edited sucessfully",
+      job
+    })
+  } catch (error) {
+    console.log("Error in job controller at edit job status controller");
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
+  }
+};
