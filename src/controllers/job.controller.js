@@ -81,8 +81,6 @@ export const getJobApplications = async (req, res) => {
   }
 
   try {
-    const applications = await Applications.find({ job: jobId }).lean();
-
     const job = await Job.findById(jobId);
 
     const isCurrentEmployer = job.employer.toString() === user._id.toString();
@@ -92,6 +90,11 @@ export const getJobApplications = async (req, res) => {
         message: "This Job Listing Is Not By You",
       });
     }
+
+    const applications = await Applications.find({ job: jobId }).populate({
+      path:"freelancer",
+      select: "profile.name",
+    }).lean();
 
     return res.status(200).json({
       message: "Fetched All Job Applications Sucessfully",
@@ -604,38 +607,43 @@ export const editJobStatus = async (req, res) => {
   const user = req.user;
   const { status } = req.body;
 
-  if(!jobId) {
+  if (!jobId) {
     return res.status(400).json({
-      message: "Job ID is required"
+      message: "Job ID is required",
     });
   }
 
-  const validStatuses = ["open","in progress", "completed", "cancelled"];
-  if(!status || !validStatuses.includes(status)) {
+  const validStatuses = ["open", "in progress", "completed", "cancelled"];
+  if (!status || !validStatuses.includes(status)) {
     return res.status(400).json({
-      message: "Invalid Status. Status must be one of the following: open, in progress, completed and cancelled"
+      message:
+        "Invalid Status. Status must be one of the following: open, in progress, completed and cancelled",
     });
   }
 
   try {
     const getJob = await Job.findById(jobId);
 
-    if(getJob.employer.toString() !== user._id.toString()) {
+    if (getJob.employer.toString() !== user._id.toString()) {
       return res.status(401).json({
-        message: "You are not authorised to edit this job"
+        message: "You are not authorised to edit this job",
       });
     }
 
-    const job = await Job.findByIdAndUpdate(jobId, {status: status}, {new: true});
+    const job = await Job.findByIdAndUpdate(
+      jobId,
+      { status: status },
+      { new: true }
+    );
 
     return res.status(200).json({
       message: "Job Status edited sucessfully",
-      job
-    })
+      job,
+    });
   } catch (error) {
     console.log("Error in job controller at edit job status controller");
     return res.status(500).json({
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
   }
 };
