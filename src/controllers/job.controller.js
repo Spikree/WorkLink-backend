@@ -590,7 +590,10 @@ export const getCurrentJobs = async (req, res) => {
   const user = req.user;
 
   try {
-    const currentJobs = await CurrentJob.find({ freelancer: user._id });
+    const currentJobs = await CurrentJob.find({ freelancer: user._id }).populate({
+      path: "employer",
+      select: "profile.name",
+    }).lean();
 
     return res.status(200).json({
       message: "Fetched Current Jobs",
