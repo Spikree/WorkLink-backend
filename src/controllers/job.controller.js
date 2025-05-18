@@ -42,7 +42,10 @@ export const getJob = async (req, res) => {
   const jobId = req.params.id;
 
   try {
-    const findJob = await Job.findById(jobId).lean();
+    const findJob = await Job.findById(jobId).populate({
+      path: "employer",
+      select: "profile.name",
+    }).lean();
 
     if (!findJob) {
       return res.status(404).json({
@@ -111,7 +114,7 @@ export const getJobApplications = async (req, res) => {
 
 export const getJobs = async (req, res) => {
   try {
-    const jobs = await Job.find({ status: "open" });
+    const jobs = await Job.find({ status: "open" })
 
     const employerIds = jobs.map((job) => job.employer);
 
