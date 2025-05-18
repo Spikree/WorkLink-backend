@@ -114,9 +114,12 @@ export const getJobApplications = async (req, res) => {
 
 export const getJobs = async (req, res) => {
   try {
-    const jobs = await Job.find({ status: "open" })
+    const jobs = await Job.find({ status: "open" }).populate({
+      path: "employer",
+      select: "profile.name",
+    })
 
-    const employerIds = jobs.map((job) => job.employer);
+    const employerIds = jobs.map((job) => job.employer._id);
 
     const employers = await User.find({ _id: { $in: employerIds } });
 
