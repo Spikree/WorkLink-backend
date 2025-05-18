@@ -400,7 +400,10 @@ export const getOnGoingJob = async (req, res) => {
   try {
     const jobs = await CurrentJob.find({
       employer: user._id,
-    });
+    }).populate({
+      path: "freelancer",
+      select: "profile.name"
+    }).lean();
 
     if (!jobs) {
       return res.status(200).json({
