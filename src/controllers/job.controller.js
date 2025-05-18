@@ -667,8 +667,19 @@ export const searchJob = async (req, res) => {
     }
 
     if (skills) {
+      // For case-insensitive search in an array
       const skillsArray = Array.isArray(skills) ? skills : skills.split(",");
-      orConditions.push({ skillsRequired: { $in: skillsArray } });
+      
+      // Create a regex pattern for each skill with case-insensitivity
+      const skillPatterns = skillsArray.map(skill => 
+        new RegExp(skill.trim(), "i")
+      );
+      
+      orConditions.push({ 
+        skillsRequired: { 
+          $elemMatch: { $regex: new RegExp(skills, "i") }
+        } 
+      });
     }
 
     if (employerName) {
