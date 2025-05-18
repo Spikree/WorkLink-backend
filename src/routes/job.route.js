@@ -18,6 +18,7 @@ import {
     getSavedJobs,
     getCurrentJobs,
     editJobStatus,
+    searchJob,
 } from "../controllers/job.controller.js";
 import checkFreelancerRole from "../middleware/checkFreelancerRole.middleware.js";
 
@@ -39,5 +40,6 @@ router.get("/getFinishedJobs", verifyToken,checkFreelancerRole ,getFinishedJobs)
 router.get("/getSavedJobs", verifyToken, checkFreelancerRole, getSavedJobs);
 router.get("/getCurrentJobs", verifyToken, checkFreelancerRole,getCurrentJobs);
 router.put("/editStatus/:jobId", verifyToken, checkEmployerRole, editJobStatus);
+router.post("/searchJob", verifyToken, checkFreelancerRole, searchJob);
 
 export default router;

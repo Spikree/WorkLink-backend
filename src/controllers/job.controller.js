@@ -4,6 +4,7 @@ import User from "../models/user.model.js";
 import savedJobsModel from "../models/savedJobs.model.js";
 import CurrentJob from "../models/currentJob.model.js";
 import FinishedJob from "../models/finishedJob.model.js";
+import mongoose from "mongoose";
 
 export const createJob = async (req, res) => {
   const user = req.user;
@@ -653,3 +654,44 @@ export const editJobStatus = async (req, res) => {
     });
   }
 };
+
+export const searchJob = async (req, res) => {
+  const { title, skills, employerName } = req.body;
+  let orConditions = [];
+  try {
+    if (title) {
+      orConditions.push({ title: { $regex: title, $options: "i" } });
+    }
+
+    if (skills) {
+      const skillsArray = Array.isArray(skills) ? skills : skills.split(",");
+      orConditions.push({ skillsRequired: { $in: skillsArray } });
+    }
+
+    if (employerName) {
+      // First find users with matching name
+      const users = await mongoose.model('User').find({
+        "profile.name": { $regex: employerName, $options: "i" }
+      });
+      
+      // Get their IDs
+      const employerIds = users.map(user => user._id);
+      
+      // Add condition to match those employer IDs
+      if (employerIds.length > 0) {
+        orConditions.push({ employer: { $in: employerIds } });
+      }
+    }
+
+    const query = orConditions.length > 0 ? { $or: orConditions } : {};
+    const jobs = await Job.find(query).populate("employer", "profile.name email");
+    res.status(200).json({
+      jobs
+    });
+  } catch (error) {
+    console.error("Search error:", error);
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+}
