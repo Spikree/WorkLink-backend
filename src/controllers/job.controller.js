@@ -42,10 +42,12 @@ export const getJob = async (req, res) => {
   const jobId = req.params.id;
 
   try {
-    const findJob = await Job.findById(jobId).populate({
-      path: "employer",
-      select: "profile.name",
-    }).lean();
+    const findJob = await Job.findById(jobId)
+      .populate({
+        path: "employer",
+        select: "profile.name",
+      })
+      .lean();
 
     if (!findJob) {
       return res.status(404).json({
@@ -95,10 +97,12 @@ export const getJobApplications = async (req, res) => {
       });
     }
 
-    const applications = await Applications.find({ job: jobId }).populate({
-      path:"freelancer",
-      select: "profile.name",
-    }).lean();
+    const applications = await Applications.find({ job: jobId })
+      .populate({
+        path: "freelancer",
+        select: "profile.name",
+      })
+      .lean();
 
     return res.status(200).json({
       message: "Fetched All Job Applications Sucessfully",
@@ -117,7 +121,7 @@ export const getJobs = async (req, res) => {
     const jobs = await Job.find({ status: "open" }).populate({
       path: "employer",
       select: "profile.name",
-    })
+    });
 
     const employerIds = jobs.map((job) => job.employer._id);
 
@@ -337,7 +341,7 @@ export const jobFinished = async (req, res) => {
   try {
     const job = await Job.findById(jobId);
 
-    if (user._id !== job._id) {
+    if (user._id.toString() !== job.employer.toString()) {
       return res.status(400).json({
         message: "You are not the owner of this job",
       });
@@ -369,7 +373,7 @@ export const jobFinished = async (req, res) => {
 
     const finJob = await FinishedJob.findOne({
       jobId: job._id,
-      freelancer: currJob.freelancer,
+      freelancer: currentJob.freelancer,
     });
 
     if (finJob) {
@@ -382,7 +386,7 @@ export const jobFinished = async (req, res) => {
       jobTitle: job.title,
       jobDescription: job.description,
       jobId: job._id,
-      freelancer: currJob.freelancer,
+      freelancer: currentJob.freelancer,
     });
 
     await finishedJob.save();
@@ -401,16 +405,83 @@ export const jobFinished = async (req, res) => {
   }
 };
 
+export const markJobCancelled = async (req, res) => {
+  const user = req.user;
+  const { jobId } = req.params;
+
+  try {
+    const job = await Job.findById(jobId);
+
+    if (user._id.toString() !== job.employer.toString()) {
+      return res.status(400).json({
+        message: "You are not the owner of this job",
+      });
+    }
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Job Not Found",
+      });
+    }
+
+    const currentJob = await CurrentJob.findOne({ jobId: jobId });
+
+    if (!currentJob) {
+      return res.status(400).json({
+        message: "This Job Was Not Accepted By Anybody",
+      });
+    }
+
+    if (job.status !== "cancelled") {
+      return res.status(400).json({
+        message: "Job Must Be Marked Cancelled First",
+      });
+    }
+
+    await Applications.updateOne(
+      {
+        job: jobId,
+        status: "accepted",
+      },
+      {
+        $set: { status: "pending" },
+      }
+    );
+
+    await Job.updateOne(
+      {
+        _id: jobId,
+      },
+      {
+        $set: { status: "open" },
+      }
+    );
+
+    await currentJob.deleteOne({ _id: currentJob._id });
+
+    return res.status(201).json({
+      message: "Job Marked Cancelled Sucessfully",
+    });
+  } catch (error) {
+    console.log("Error in job controller at job finished controller" + error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+};
+
 export const getOnGoingJob = async (req, res) => {
   const user = req.user;
 
   try {
     const jobs = await CurrentJob.find({
       employer: user._id,
-    }).populate({
-      path: "freelancer",
-      select: "profile.name"
-    }).lean();
+    })
+      .populate({
+        path: "freelancer",
+        select: "profile.name",
+      })
+      .lean();
 
     if (!jobs) {
       return res.status(200).json({
@@ -597,10 +668,12 @@ export const getCurrentJobs = async (req, res) => {
   const user = req.user;
 
   try {
-    const currentJobs = await CurrentJob.find({ freelancer: user._id }).populate({
-      path: "employer",
-      select: "profile.name",
-    }).lean();
+    const currentJobs = await CurrentJob.find({ freelancer: user._id })
+      .populate({
+        path: "employer",
+        select: "profile.name",
+      })
+      .lean();
 
     return res.status(200).json({
       message: "Fetched Current Jobs",
@@ -672,28 +745,28 @@ export const searchJob = async (req, res) => {
     if (skills) {
       // For case-insensitive search in an array
       const skillsArray = Array.isArray(skills) ? skills : skills.split(",");
-      
+
       // Create a regex pattern for each skill with case-insensitivity
-      const skillPatterns = skillsArray.map(skill => 
-        new RegExp(skill.trim(), "i")
+      const skillPatterns = skillsArray.map(
+        (skill) => new RegExp(skill.trim(), "i")
       );
-      
-      orConditions.push({ 
-        skillsRequired: { 
-          $elemMatch: { $regex: new RegExp(skills, "i") }
-        } 
+
+      orConditions.push({
+        skillsRequired: {
+          $elemMatch: { $regex: new RegExp(skills, "i") },
+        },
       });
     }
 
     if (employerName) {
       // First find users with matching name
-      const users = await mongoose.model('User').find({
-        "profile.name": { $regex: employerName, $options: "i" }
+      const users = await mongoose.model("User").find({
+        "profile.name": { $regex: employerName, $options: "i" },
       });
-      
+
       // Get their IDs
-      const employerIds = users.map(user => user._id);
-      
+      const employerIds = users.map((user) => user._id);
+
       // Add condition to match those employer IDs
       if (employerIds.length > 0) {
         orConditions.push({ employer: { $in: employerIds } });
@@ -701,14 +774,17 @@ export const searchJob = async (req, res) => {
     }
 
     const query = orConditions.length > 0 ? { $or: orConditions } : {};
-    const jobs = await Job.find(query).populate("employer", "profile.name email");
+    const jobs = await Job.find(query).populate(
+      "employer",
+      "profile.name email"
+    );
     res.status(200).json({
-      jobs
+      jobs,
     });
   } catch (error) {
     console.error("Search error:", error);
     return res.status(500).json({
-      message: "Internal server error"
+      message: "Internal server error",
     });
   }
-}
+};

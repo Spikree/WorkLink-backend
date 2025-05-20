@@ -19,6 +19,7 @@ import {
     getCurrentJobs,
     editJobStatus,
     searchJob,
+    markJobCancelled,
 } from "../controllers/job.controller.js";
 import checkFreelancerRole from "../middleware/checkFreelancerRole.middleware.js";
 
@@ -32,6 +33,7 @@ router.post("/saveJob/:jobId",verifyToken,checkFreelancerRole,saveJob);
 router.post("/acceptApplication/:jobId/:applicationId",verifyToken,checkEmployerRole,acceptApplication);
 router.post("/cancelAcceptedApplication/:jobId/:applicationId",verifyToken,checkEmployerRole,cancelAcceptedApplication);
 router.post("/jobFinished/:jobId",verifyToken,checkEmployerRole,jobFinished);
+router.post("/jobCancelled/:jobId", verifyToken, checkEmployerRole,markJobCancelled);
 router.get("/getOnGoingJobs",verifyToken,checkEmployerRole,getOnGoingJob);
 router.get("/getCreatedJobs", verifyToken,checkEmployerRole,getCreatedJob);
 router.delete("/deleteJob/:jobId",verifyToken,checkEmployerRole,deletJob);
