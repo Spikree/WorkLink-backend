@@ -185,6 +185,53 @@ export const resetpassword = async (req, res) => {
   }
 };
 
+export const changeEmail = async (req,res) => {
+  const user = req.user;
+  const {newEmail, password} = req.body;
+  try {
+
+    if(!newEmail || !password) {
+      return res.status(400).json({
+        message: "Missing Fields"
+      });
+    }
+
+    const currentUser = await User.findById(user._id);
+
+    if(!currentUser) {
+      return res.status(404).json({
+        message: "No user found"
+      });
+    }
+
+    if(newEmail === currentUser.email) {
+      return res.status(400).json({
+        message: "New Email Cannot Be The Same As The Current Email"
+      })
+    }
+
+    const isMatch = await bcrypt.compare(password, currentUser.password);
+
+    if(!isMatch) {
+      return res.status(400).json({
+        message: "Invalid Credentials"
+      });
+    }
+
+    currentUser.email = newEmail;
+    await currentUser.save();
+
+    return res.status(200).json({
+      message: "Email changed sucessfully"
+    })
+  } catch (error) {
+    console.log("Error in auth controller at change email controller", error);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    })
+  }
+};
+
 export const checkAuth = async (req, res) => {
     const user = req.user
   try {
