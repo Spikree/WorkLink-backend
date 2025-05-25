@@ -161,3 +161,37 @@ export const editReview = async (req, res) => {
     });
   }
 };
+
+export const hasReviewed = async (req, res) => {
+  const user = req.user;
+  const { userId } = req.params;
+
+  try {
+    const hasReviewed = await Rating.findOne({
+      reviewer: user._id,
+      reviewOf: userId,
+    }).populate({
+      path: "reviewer",
+      select: "profile.name",
+    });
+
+    if (!hasReviewed) {
+      return res.status(400).json({
+        message: "You haven't posted a review yet",
+        userReview: false,
+        hasReviewed,
+      });
+    }
+
+    return res.status(200).json({
+      message: "User review found",
+      userReview: true,
+      hasReviewed,
+    });
+  } catch (error) {
+    console.log("error in review controller at has reviewed route", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+};
