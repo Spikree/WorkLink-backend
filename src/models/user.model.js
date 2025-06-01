@@ -16,6 +16,7 @@ const userSchema = schema({
     skills: [String],
     portfolio: String,
     rating: { type: Number, default: 0 },
+    profilePicture: String,
   },
   createdOn: { type: Date, default: new Date().getTime() },
 });
