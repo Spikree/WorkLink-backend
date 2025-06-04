@@ -602,13 +602,17 @@ export const getAppliedJobs = async (req, res) => {
 
     const jobMap = new Map();
     jobs.forEach((job) => {
-      jobMap.set(job._id.toString(), job.title);
+      jobMap.set(job._id.toString(), {title: job.title, employer: job.employer});
     });
 
-    appliedJobs = appliedJobs.map((app) => ({
-      ...app._doc,
-      jobTitle: jobMap.get(app.job.toString()) || "Title not found",
-    }));
+    appliedJobs = appliedJobs.map((app) => {
+      const jobInfo = jobMap.get(app.job.toString());
+      return {
+        ...app._doc,
+        jobTitle: jobInfo?.title || "Title not found",
+        employer: jobInfo?.employer || "Employer not found"
+      }
+    })
 
     return res.status(200).json({
       message: "Fetched All Applied Jobs Sucessfully",
