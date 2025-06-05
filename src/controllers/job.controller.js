@@ -387,6 +387,7 @@ export const jobFinished = async (req, res) => {
       jobDescription: job.description,
       jobId: job._id,
       freelancer: currentJob.freelancer,
+      employer: currentJob.employer,
     });
 
     await finishedJob.save();
@@ -602,7 +603,10 @@ export const getAppliedJobs = async (req, res) => {
 
     const jobMap = new Map();
     jobs.forEach((job) => {
-      jobMap.set(job._id.toString(), {title: job.title, employer: job.employer});
+      jobMap.set(job._id.toString(), {
+        title: job.title,
+        employer: job.employer,
+      });
     });
 
     appliedJobs = appliedJobs.map((app) => {
@@ -610,9 +614,9 @@ export const getAppliedJobs = async (req, res) => {
       return {
         ...app._doc,
         jobTitle: jobInfo?.title || "Title not found",
-        employer: jobInfo?.employer || "Employer not found"
-      }
-    })
+        employer: jobInfo?.employer || "Employer not found",
+      };
+    });
 
     return res.status(200).json({
       message: "Fetched All Applied Jobs Sucessfully",
@@ -630,7 +634,9 @@ export const getFinishedJobs = async (req, res) => {
   const user = req.user;
 
   try {
-    const finishedJobs = await FinishedJob.find({ freelancer: user._id });
+    const finishedJobs = await FinishedJob.find({
+      $or: [{ freelancer: user._id }, { employer: user._id }],
+    });
 
     if (!finishedJobs) {
       return res.status(404).json({
@@ -643,7 +649,7 @@ export const getFinishedJobs = async (req, res) => {
       finishedJobs,
     });
   } catch (error) {
-    console.log("error in job controller at get finished job");
+    console.log("error in job controller at get finished job", error);
     return res.status(500).json({
       message: "Internal Server Error",
     });

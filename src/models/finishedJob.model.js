@@ -6,6 +6,7 @@ const finishedJobSchema = schema({
     jobDescription: {type: String, required: true},
     jobId: {type: mongoose.Schema.Types.ObjectId, ref: 'Job', required: true},
     freelancer: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
+    employer: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
     createdAt: {type: Date, default: Date.now},
 })
 
