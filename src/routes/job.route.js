@@ -38,7 +38,7 @@ router.get("/getOnGoingJobs",verifyToken,checkEmployerRole,getOnGoingJob);
 router.get("/getCreatedJobs", verifyToken,checkEmployerRole,getCreatedJob);
 router.delete("/deleteJob/:jobId",verifyToken,checkEmployerRole,deletJob);
 router.get("/getAppliedJobs", verifyToken,checkFreelancerRole,getAppliedJobs);
-router.get("/getFinishedJobs", verifyToken,checkFreelancerRole ,getFinishedJobs);
+router.get("/getFinishedJobs", verifyToken,getFinishedJobs);
 router.get("/getSavedJobs", verifyToken, checkFreelancerRole, getSavedJobs);
 router.get("/getCurrentJobs", verifyToken, checkFreelancerRole,getCurrentJobs);
 router.put("/editStatus/:jobId", verifyToken, checkEmployerRole, editJobStatus);
