@@ -118,7 +118,7 @@ export const getJobApplications = async (req, res) => {
 
 export const getJobs = async (req, res) => {
   try {
-    const jobs = await Job.find({ status: "open" }).populate({
+    const jobs = await Job.find({ status: "open" }).sort({createdAt: -1}).populate({
       path: "employer",
       select: "profile.name",
     });
