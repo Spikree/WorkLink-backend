@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from 'cookie-parser';
+import rateLimit from "express-rate-limit"
 
 import authRouter from "./routes/auth.route.js";
 import profileRouter from "./routes/profile.route.js"
@@ -15,11 +16,17 @@ import connectDb from "./lib/connectToDb.js";
 
 import { app,server } from "./socket/socket.js";
 
+const apiLimit = rateLimit({
+    windowMs: 60_000,
+    max:500,
+})
+
 dotenv.config();
 app.use(express.json());
 app.use(cookieParser());
 const PORT = process.env.PORT || 5000;
 app.use(cors({ origin: "https://worklink-client.onrender.com", credentials: true }));
+app.use(apiLimit)
 connectDb();
 
 app.use("/auth",authRouter);
