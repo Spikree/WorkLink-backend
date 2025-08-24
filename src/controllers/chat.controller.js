@@ -9,18 +9,9 @@ export const getMessages = async (req, res) => {
   const myId = user._id;
 
   try {
-    const messages = await Message.find({
-      $or: [
-        {
-          senderId: myId,
-          receiverId: userToChatId,
-        },
-        {
-          senderId: userToChatId,
-          receiverId: myId,
-        },
-      ],
-    }).sort({ createdAt: 1 });
+    const chatId = [myId, userToChatId].sort().join("_");
+
+    const messages = await Message.find({ chatId }).sort({ createdAt: 1 });
 
     return res.status(200).json({
       messages: "Fetched All Messages",
